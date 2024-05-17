@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="webgl-debug.js"></script> 
+<script src="gl-matrix-min.js"></script> 
+
+<script id="vShader" type="x-shader/x-vertex">
+attribute vec4 aVertexPosition; 
+attribute vec4 aVertexColor; 
+uniform mat4 uVerticesTransform; 
+varying vec4 vColor; 
+void main() {
+	gl_Position = uVerticesTransform * aVertexPosition; 
+	vColor = aVertexColor;
+} 
+</script>
+
+<script id="fShader" type="x-shader/x-fragment">
+precision mediump float; 
+varying vec4 vColor; 
+void main() {
+	gl_FragColor = vColor;
+}
+</script>
+ 
+<script>
+ 
+var gl; 
+var canvas; 
+var shadersProgram; 
+var vertexPositionAttributePointer; 
+var vertexColorAttributePointer;
+var verticesTransformUniformPointer; 
+var vertexBuffer;
+var colorBuffer; 
+var indexBuffer; // ΝΕΟ.1
+var totalAngle = 0.0; 
+var rotationXMatrix = new Float32Array(16);
+var requestID = 0; 
+ 
+function createGLContext(inCanvas) {
+	var outContext = null;
+	outContext = inCanvas.getContext("webgl");
+		if (!outContext)
+			outContext = inCanvas.getContext("experimental-webgl"); 
+		if (!outContext) 
+			alert("WebGL rendering context creation error.");
+ 
+	return outContext;
+}
+
+function createCompileShader(shaderType, shaderSource) {
+	var outShader = gl.createShader(shaderType);
+	gl.shaderSource(outShader, shaderSource); 
+	gl.compileShader(outShader); 
+	if (!gl.getShaderParameter(outShader, gl.COMPILE_STATUS)) { 
+		alert( "Shader compilation error. " + gl.getShaderInfoLog(outShader) ); 
+		gl.deleteShader(outShader);
+		outShader = null;
+	}
+	return outShader;
+}
+
+function initShaders() {
+	var vertexShaderSource = document.getElementById("vShader").textContent; 
+	var fragmentShaderSource = document.getElementById("fShader").textContent; 
+	var vertexShader = createCompileShader(gl.VERTEX_SHADER, vertexShaderSource); 
+	var fragmentShader = createCompileShader(gl.FRAGMENT_SHADER, fragmentShaderSource); 
+	shadersProgram = gl.createProgram(); 
+	gl.attachShader(shadersProgram, vertexShader); 
+	gl.attachShader(shadersProgram, fragmentShader); 
+	gl.linkProgram(shadersProgram); 
+	if (!gl.getProgramParameter(shadersProgram, gl.LINK_STATUS)) { 
+		alert("Shaders linking error.");
+	}
+	gl.useProgram(shadersProgram); 
+	vertexPositionAttributePointer = 	gl.getAttribLocation(shadersProgram, "aVertexPosition"); 
+	gl.enableVertexAttribArray(vertexPositionAttributePointer); 
+	vertexColorAttributePointer = gl.getAttribLocation(shadersProgram, "aVertexColor"); 
+	gl.enableVertexAttribArray(vertexColorAttributePointer); 
+	verticesTransformUniformPointer = gl.getUniformLocation(shadersProgram, "uVerticesTransform"); 
+}
+
+function initBuffers() {
+	// ΑΛΛΑΓΜΕΝΟ.4 Κορυφές σε 3 διαστάσεις για δημιουργία τετράεδρου
+	var tetraVertices = new Float32Array([
+				 0.0,  0.2,  0.0, 1.0, // Κορυφή Α
+				-0.2, -0.2, -0.2, 1.0, // Κορυφή Β
+				 0.2, -0.2, -0.2, 1.0, // Κορυφή Γ
+				 0.0, -0.2,  0.2, 1.0  // Κορυφή Δ
+				]);
+	vertexBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); 
+	gl.bufferData(gl.ARRAY_BUFFER, tetraVertices,	gl.STATIC_DRAW); 
+	vertexBuffer.itemSize = 4;  
+	vertexBuffer.itemCount = 4;
+
+	// Χρώματα 4 κορυφών
+	var tetraColors = new Float32Array([
+				1.0, 0.0, 0.0, 1.0, // Χρώμα κορυφής Α: κόκκινο
+				0.0, 1.0, 0.0, 1.0, // Χρώμα κορυφής Β: πράσινο
+				0.0, 0.0, 1.0, 1.0, // Χρώμα κορυφής Γ: μπλε
+				1.0, 1.0, 0.0, 1.0  // Χρώμα κορυφής Δ: κίτρινο
+				]);
+	colorBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); 
+	gl.bufferData(gl.ARRAY_BUFFER, tetraColors, gl.STATIC_DRAW); 
+	colorBuffer.itemSize = 4;  
+	colorBuffer.itemCount = 4;
+
+	// ΝΕΟ.2 Νέος πίνακας με αναφορές στις παραπάνω κορυφές (indices) του ΑΛΛΑΓΜΕΝΟ.4 και σχετικός buffer
+	var indexMatrix = new Uint16Array([
+				0,1,2,  // ΑΒΓ
+				0,2,3,  // ΑΓΔ
+				0,3,1,  // ΑΔΒ
+				1,3,2  // ΒΔΓ
+				]);
+	indexBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer); 
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexMatrix,gl.STATIC_DRAW);
+	indexBuffer.itemCount = 12; 
+	// ΤΕΛΟΣ ΝΕΟ.2
+}
+
+function drawScene() { 
+	gl.clear(gl.COLOR_BUFFER_BIT); // ΘΑ ΓΙΝΕΙ ΑΛΛΑΓΜΕΝΟ.6
+	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // ΝΕΟ.5: Καθαρίζει μαζί με το background και το z-buffer 
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); 
+	gl.vertexAttribPointer(vertexPositionAttributePointer, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); 
+	gl.vertexAttribPointer(vertexColorAttributePointer, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	
+	// Ομάδα εντολών για υπολογισμό συνολικής γωνίας περιστροφής
+	var txtStepAngle; 
+	txtStepAngle = document.getElementById("stepAngleTxt").value; 
+	var numStepAngle = parseFloat(txtStepAngle);
+	numStepAngle = numStepAngle*Math.PI/180.0; 
+	totalAngle += numStepAngle; 
+	
+	// ΑΛΛΑΓΜΕΝΟ.1 Αρχικά, μόνο πίνακας περιστροφής
+	glMatrix.mat4.fromXRotation(rotationXMatrix, totalAngle );  
+	
+	// ΑΛΛΑΓΜΕΝΟ.2 Αρχικά, δεν έχουμε μετακίνηση οπότε έχουν φύγει οι εντολές δημιουργίας πίνακα μετακίνησης 
+	// και πολλαπλασιασμού πινάκων
+	
+	// ΑΛΛΑΓΜΕΝΟ.3 Αρχικά, ο πίνακας περιστροφής είναι από μόνος του ο συνολικός μετασχηματισμός
+	gl.uniformMatrix4fv(verticesTransformUniformPointer, false, rotationXMatrix); 
+	
+	// ΑΡΧΗ ΔΙΚΟΥΣΑΣ
+	
+	// Δηλώστε και δημιουργήστε (τοπικά) ένα νέο πίνακα translationMatrix και έναν πίνακα finalMatrix (ο δεύτερος για το γινόμενο)
+	
+	// Προσθέστε μια for που θα εκτελεστεί από p=-0.5 έως p=0.5 με βήμα 0.5. Σε κάθε επανάληψη:
+		// Μετατρέπει το νέο πίνακα translationMatrix σε μετακίνησης (translate): κατά p στους άξονες x και y, και κατά 0 ως προς z.
+		
+		// Τον πολλαπλασιάζει με τον πίνακα περιστροφής (που έχει ήδη δημιουργηθεί από την ΑΛΛΑΓΜΕΝΟ.1 ώστε το τετράεδρο να φαίνεται 
+			// ότι περιστρέφεται "επιτόπου" σε κάθε θέση - το γινόμενο αποθηκεύεται στον finalMatrix
+		
+		// Ταΐζει το γινόμενο στο uniform uTransformMatrix - ΑΠΕΝΕΡΓΟΠΟΙΗΣΤΕ την παραπάνω εντολή ΑΛΛΑΓΜΕΝΟ.3 που κάνει κάτι
+			// αντίστοιχο και βάλτε την εδώ αλλά ΠΡΟΣΟΧΗ, χρησιμοποιήστε τον πίνακα finalMatrix σαν παράμετρο εδώ.
+		
+		// Τρέχει την παρακάτω εντολή σχεδίασης drawElements (ΝΕΟ.3) όπως είναι, αλλά ΜΕΣΑ ΣΤΟ ΣΩΜΑ ΤΗΣ ΕΠΑΝΑΛΗΨΗΣ της for
+	
+	// ΤΕΛΟΣ ΔΙΚΟΥΣΑΣ
+	
+	gl.drawElements(gl.TRIANGLES,indexBuffer.itemCount,gl.UNSIGNED_SHORT, 0); // ΝΕΟ.3
+	// ΑΛΛΑΓΜΕΝΟ.5 Σχεδίαση με δείκτες πια
+	// gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexBuffer.itemCount);  
+}
+ 
+function main() {
+	minDimension = Math.min(window.innerHeight, window.innerWidth);
+	canvas = document.getElementById("sceneCanvas"); 
+	canvas.width = 0.9*minDimension; 
+	canvas.height = 0.9*minDimension; 
+	gl = WebGLDebugUtils.makeDebugContext(createGLContext(canvas));
+	initShaders(); 
+	initBuffers(); 
+	gl.clearColor(0.5, 0.5, 0.5, 1.0); 
+	gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+	// gl.enable(gl.DEPTH_TEST); // ΝΕΟ.4
+	drawScene(); 
+ }
+
+function startAnimation() {
+	if (requestID == 0)
+		requestID = window.requestAnimationFrame(animationStep);
+}
+
+function animationStep() {
+	drawScene();
+	requestID = window.requestAnimationFrame(animationStep);
+}
+
+function stopAnimation() {
+	window.cancelAnimationFrame(requestID);
+	requestID = 0;
+}
+
+ </script>
+ 
+ </head>
+
+<body onload="main()">
+<canvas id="sceneCanvas">
+</canvas>
+<p>
+Βήμα γωνίας περιστροφής:<input type="text" id="stepAngleTxt" value="1" autocomplete="off"> 
+<button id="startButton" onclick="startAnimation()">Ξεκίνα!</button>
+<button id="stopButton" onclick="stopAnimation()">Σταμάτα!</button>
+</p>
+</body>
+ </html>
+
+<!--
+ΒΗΜΑ 0. (READ-ONLY) 
+0.0 Αρχικά, χωρίς μετακίνηση, μόνο περιστροφή: ο μοναδικός μετασχηματισμός είναι η περιστροφή γύρω από τον x 
+	(ΑΛΛΑΓΜΕΝΟ.1, ΑΛΛΑΓΜΕΝΟ.2, ΑΛΛΑΓΜΕΝΟ.3)
+
+0.1 Χωρίς FACE CULLING (για ευκολία). Στο συγκεκριμένο παράδειγμα δε χρησιμοποιούμε 
+	(για ευκολία και σιγουριά στην αναζήτηση λογικών λαθών..) Διαλογή Όψεων (FACE CULLING) άρα δε μας απασχολεί η αριστερόστροφη/δεξιόστροφη σχεδίαση των τριγώνων. Αυτό σημαίνει ότι οποιοδήποτε τρίγωνο τυχαίνει να είναι 
+	"μπροστά", ως προς z, κατά την περιστροφή της πυραμίδας θα ΠΡΕΠΕΙ να εμφανίζεται.
+
+0.2 Τρισδιάστατη σχεδίαση: Έχουν αλλάξει οι συντεταγμένες των κορυφών αφού πια θέλουμε ένα τρισδιάστατο αντικείμενο (τετράεδρο). (ΑΛΛΑΓΜΕΝΟ.4)
+
+0.3 Με INDEXED DRAWING. Εκμεταλλευόμαστε τη δυνατότητα που μας δίνει η WebGL να ορίσουμε μια φορά τις συντεταγμένες των 
+	κορυφών και να ορίζουμε τα τρίγωνα με αναφορές στις κορυφές (χωρίς να επαναλαμβάνουμε τις συντεταγμένες τους). Για να γίνει αυτό, σε σχέση με τα προηγούμενα: 
+	- Έχει δηλωθεί ένας νέος buffer (ΝΕΟ.1)
+	- Παρατηρήστε τις αλλαγές στην initBuffers (ΝΕΟ.2): o νέος buffer που έχει προστεθεί περιέχει δείκτες σε 
+		κορυφές του vertexBuffer (δηλ. αναφορές σε κορυφές του τετράεδρου). 
+	- Δείτε εκεί και τις αλλαγές στην bindBuffer και στην bufferData
+	- Παρατηρήστε, στη drawScene(), τις αλλαγές στην τελική εντολή σχεδίασης (ΝΕΟ.3 / ΑΛΛΑΓΜΕΝΟ.5).
+
+0.4 Με gl.TRIANGLES (όχι gl.TRIANGLE_STRIP) (για ευκολία). Χρησιμοποιούμε gl.TRIANGLES σαν παράμετρο στη draw που υπονοεί ότι 
+	ορίζουμε κάθε πλευρά του τετράεδρου σαν ανεξάρτητο τρίγωνο στον πίνακα των δεικτών.
+
+ΒΗΜΑ 1.
+DEPTH TEST (Z-BUFFER)
+1.0. Παρατηρήστε το τετράεδρο ενώ περιστρέφεται... Υπάρχει κάποιο πρόβλημα στο οπτικό αποτέλεσμα; (Hint: Ναι)
+1.1. Ενεργοποιήστε την προτελευταία (σχολιασμένη αρχικά) εντολή στη main() ΝΕΟ.4 
+1.2. Ενεργοποιήστε την εντολή ΝΕΟ.5 (στη drawScene()) και απενεργοποιήστε την αντίστοιχη (ακριβώς πριν) ΘΑ ΓΙΝΕΙ ΑΛΛΑΓΜΕΝΟ.6
+1.3. Δείτε την αλλαγή στο οπτικό αποτέλεσμα.
+
+ΒΗΜΑ 2.
+ΣΧΕΔΙΑΣΗ ΠΟΛΛΑΠΛΩΝ ΑΝΤΙΚΕΙΜΕΝΩΝ 
+Θέλουμε να εμφανίσουμε 3 τετράεδρα (από το ένα που έχουμε ορίσει με συντεταγμένες) που θα φαίνονται να περιστρέφονται στις θέσεις τους.
+Οι θέσεις τους θα είναι κάτω αριστερά, στο κέντρο και επάνω δεξιά όπως βλέπουμε την οθόνη.
+Θα το κάνουμε μετασχηματίζοντας και επανασχεδιάζοντας το ένα τετράεδρο που έχουμε.
+
+2.1. Δείτε τα σχόλια πάνω από τις τελικές εντολές σχεδίασης στη drawScene (ΔΙΚΟΥΣΑΣ) και δημιουργήστε την αντίστοιχη for με το περιεχόμενο που περιγράφεται
+2.2. Αλλάξτε τη σειρά του γινομένου των πινάκων μέσα στη for που δημιουργήσατε στη drawScene(). Τι παρατηρείτε;
+2.3. Πειραματιστείτε με περισσότερα τετράεδρα, άλλες θέσεις, κλιμάκωση μαζί/αντί για περιστροφή (π.χ. κάντε τα να φουσκώνουν και να ξεφουσκώνουν ενώ/αντί να περιστρέφονται), κλπ.
+-->
