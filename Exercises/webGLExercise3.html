@@ -38,7 +38,10 @@ var totalAngle = 0.0; // ΝΕΟ.5: η μεταβλητή που θα "θυμάτ
 var rotationZMatrix = new Float32Array(16); // ΝΕΟ.6: δήλωση του πίνακα μετασχηματισμού περιστροφής
 
 // ΔΙΚΟΣΑΣ.1: προσθέστε τις δήλωσεις των totalX, totalY που θα θυμούνται τη συνολική μετακίνηση κατά x και y
+var totalX = 0.0;
+var totalY = 0.0;
 // ΔΙΚΟΣΑΣ.2: προσθέστε τη δήλωση ενός πίνακα για το μετασχηματισμό μετακίνησης
+var translationMatrix = new Float32Array(16);
  
 function createGLContext(inCanvas) {
 	var outContext = null;
@@ -84,6 +87,7 @@ function initShaders() {
 	verticesTransformUniformPointer = gl.getUniformLocation(shadersProgram, "uVerticesTransform"); 
 	// ΝΕΟ.7: Βρες και αποθήκευσε στην αντίστοιχη μεταβλητή, τη διεύθυνση του 
 	// uniform στο shader program το οποίο έχει όνομα το string που δόθηκε σα δεύτερη παράμετρος (αντίστοιχη της getAttribLocation λίγο παραπάνω)
+
 	
 	// ΔΕ ΧΡΕΙΑΖΕΤΑΙ ΑΝΤΙΣΤΟΙΧΗ enable ΓΙΑ ΤΑ uniforms (δηλ. δε χρειάζεται αντίστοιχη της enableVertexAttribArray)
 
@@ -134,6 +138,7 @@ function drawScene() {
 	console.log(rotationZMatrix);
 	// Δείτε στην κονσόλα το περιεχόμενο του πίνακα περιστροφής: είναι αποθηκευμένος ανά γραμμή ή ανά στήλη;
 	// ΔΙΚΟΣΑΣ.3 Προσθέστε τις αντίστοιχες εντολές των ΝΕΟ.8, NEO.9, ΝΕΟ.10, ΝΕΟ.12 για υπολογισμό της συνολικής μετακίνησης ως προς x
+
 	// ΔΙΚΟΣΑΣ.4 Προσθέστε τις αντίστοιχες εντολές των ΝΕΟ.8, NEO.9, ΝΕΟ.10, ΝΕΟ.12 για υπολογισμό της συνολικής μετακίνησης ως προς y
 	
 	// ΔΙΚΟΣΑΣ.5 Παρόμοια με την ΝΕΟ.13, χρησιμοποιήστε τη συνάρτηση της βιβλιοθήκης πινάκων 
@@ -179,6 +184,8 @@ function drawScene() {
 Βήμα γωνίας περιστροφής:<input type="text" id="stepAngleTxt" value="0" autocomplete="off"> 
 
 <!-- ΔΙΚΟΣΑΣ.0 Προσθέστε δύο text boxes για το βήμα μετακίνησης ως προς x και y αντίστοιχα -->
+Μετακίνηση ως προς x:<input type="text" id="moveX" value="0" autocomplete="off">
+Μετακίνηση ως προς y:<input type="text" id="moveY" value="0" autocomplete="off">
 
 <!-- ΝΕΟ.0.2 Κουμπί για επανασχεδίαση της σκηνής (κλήση της drawScene) -->
 <button id="drawSceneButton" onclick="drawScene()">Ξανασχεδίασε!</button>
