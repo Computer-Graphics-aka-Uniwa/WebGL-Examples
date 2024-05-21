@@ -6,13 +6,11 @@
 <script id="vShader" type="x-shader/x-vertex">
 // Ο παρακάτω κώδικας δεν είναι Javascript αλλά GLSL-ES
 	attribute vec4 aVertexPosition; // attribute: παράμετρος εισόδου του shader
-	attribute vec4 aVertexColor;
-	// ΝΕΟ 1. Προσθέστε ένα νέο attribute (πάλι τύπου vec4) για το χρώμα των κορυφών: aVertexColor
+	attribute vec4 aVertexColor; // ΝΕΟ 1. Προσθέστε ένα νέο attribute (πάλι τύπου vec4) για το χρώμα των κορυφών: aVertexColor
 	varying vec4 vColor; // varying: μεταβλητή εξόδου προς το fragment shader (μέσω rasterization)
-	
 	void main() {
 		gl_Position = aVertexPosition; // Θέση κάθε κορυφής (vertex) σε ομογενείς συντεταγμένες
-		vColor = aVertexColor;
+		vColor = aVertexColor; //vColor = vec4(0.0,0.0,1.0,1.0);  // Χρώμα κάθε κορυφής (vertex) (r,g,b,a)
 		// ΝΕΟ 2. Αντικαταστήστε την προηγούμενη εντολή με μία που θα εκχωρεί το νέο attribute στο vColor 
 		// (αντί να δίνουμε "καρφωτά" το χρώμα, εκμεταλλευόμαστε το νέο attribute)
 	} 
@@ -31,9 +29,11 @@ var gl; // Το rendering context που ***ΜΑΣ ΔΙΝΕΙ ΠΡΟΣΒΑΣΗ �
 var canvas; // Το DOM αντικείμενο που θα φιλοξενήσει το context
 var shadersProgram; // O κώδικας των vertex και fragment shaders
 var vertexPositionAttributePointer; // Η διεύθυνση του attribute aVertexPosition
-var vertexColorAttributePointer; // ΝΕΟ 3. Δηλώστε μια νέα μεταβλητή (δείκτης) για τη διεύθυνση του attribute του χρώματος: vertexColorAttributePointer
-var vertexBuffer;  // Η μεταβλητή στην οποία θα αποθηκευτούν προσωρινά τα δεδομένα των vertices 
-var colorBuffer; // ΝΕΟ 4. Δηλώστε μια νέα μεταβλητή για τον buffer των χρωμάτων: colorBuffer
+var vertexColorAttributePointer; 
+// ΝΕΟ 3. Δηλώστε μια νέα μεταβλητή (δείκτης) για τη διεύθυνση του attribute του χρώματος: vertexColorAttributePointer
+var vertexBuffer;  // Η μεταβλητή στην οποία θα αποθηκευτούν προσωρινά τα δεδομένα των vertices
+var colorBuffer; 
+// ΝΕΟ 4. Δηλώστε μια νέα μεταβλητή για τον buffer των χρωμάτων: colorBuffer
 
 function createGLContext(inCanvas) {
 	var outContext = null;
@@ -78,7 +78,8 @@ function initShaders() {
 	gl.useProgram(shadersProgram); // 5.10 Προσάρτησε το εκτελέσιμο στο context 
 	vertexPositionAttributePointer = 	gl.getAttribLocation(shadersProgram, "aVertexPosition"); // 5.11 Βρες και αποθήκευσε στην αντίστοιχη μεταβλητή, τον αύξοντα αριθμό της διεύθυνσης του attribute του shader program, το οποίο έχει όνομα το string που δόθηκε σα δεύτερη παράμετρος
 	
-	vertexColorAttributePointer = gl.getAttribLocation(shadersProgram, "aVertexColor"); // ΝΕΟ 5. Κάντε ό,τι και το βήμα 5.11 για το νέο attribute aVertexColor, δηλαδή αποθηκεύστε τον αύξοντα αριθμό της διεύθυνσής του στο δείκτη που δηλώσατε στο ΝΕΟ 3 
+	vertexColorAttributePointer = gl.getAttribLocation(shadersProgram, "aVertexColor");
+	// ΝΕΟ 5. Κάντε ό,τι και το βήμα 5.11 για το νέο attribute aVertexColor, δηλαδή αποθηκεύστε τον αύξοντα αριθμό της διεύθυνσής του στο δείκτη που δηλώσατε στο ΝΕΟ 3 
 	
 	gl.enableVertexAttribArray(vertexPositionAttributePointer); // 5.12 Προετοίμασε το attribute (μέσω του παραπάνω pointer που δείχνει σε αυτό) να δεχθεί δεδομένα
 	
@@ -88,9 +89,9 @@ function initShaders() {
 
 function initBuffers() {
 	var triangleVertices = new Float32Array([
-							 0.0,  0.5, 0.0, 1.0, 
-							 0.5, -0.5, 0.0, 1.0,
-							 -0.5, -0.5, 0.0, 1.0]);
+							 0.0, -0.5, 0.0, 1.0, 
+							 -0.5, 0.5, 0.0, 1.0,
+							 0.5, 0.5, 0.0, 1.0]);
 	// 6.1 Δημιούργησε έναν πίνακα (ArrayBuffer) στη μνήμη με τις συντεταγμένες (x,y,z,w) κάθε κορυφής. Ο πίνακας είναι μονοδιάστατος
 	vertexBuffer = gl.createBuffer(); // 6.2 Δημιούργησε (δέσμευσε) έναν buffer για τις κορυφές
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); // 6.3 Ενεργοποίησέ τον, δηλ. φέρε τον στο προσκήνιο: ό,τι δουλειά γίνεται με buffer θα αφορά αυτόν
@@ -98,17 +99,15 @@ function initBuffers() {
 	vertexBuffer.itemSize = 4;  // 6.5 Δώσε τιμή στην (custom) ιδιότητα του buffer που καθορίζει ανά πόσες τιμές αφορούν την ίδια κορυφή 
 	vertexBuffer.itemCount = 3; // 6.6 Δώσε τιμή στην (custom) ιδιότητα του buffer που καθορίζει πόσες κορυφές αφορά ο buffer συνολικά
 	
-	var triangleColors = new Float32Array([
-							 0.0, 1.0, 0.0, 1.0, 
-							 1.0, 0.0, 0.0, 1.0,
+	var triangleVerticesColors = new Float32Array([
+							 1.0, 0.0, 0.0, 1.0, 
+							 0.0, 1.0, 0.0, 1.0,
 							 0.0, 0.0, 1.0, 1.0]);
-	
 	colorBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, triangleColors, gl.STATIC_DRAW); 
-	colorBuffer.itemSize = 4;  
+	gl.bufferData(gl.ARRAY_BUFFER, triangleVerticesColors, gl.STATIC_DRAW); 
+	colorBuffer.itemSize = 4;
 	colorBuffer.itemCount = 3;
-	
 	// ΝΕΟ 7. Κάνετε ό,τι και στα 6.1-6.6 χρησιμοποιώντας τον colorBuffer όπου χρειάζεται buffer κι έναν 
 	// νέο πίνακα triangleColors όπου μέσα του θα αποθηκεύσετε τα χρώματα που θέλετε για κάθε κορυφή ως 
 	// αριθμούς r,g,b,a με τρόπο όμοιο με τα x,y,z,w των συντεταγμένων των κορυφών (πραγματικές τιμές 
@@ -120,15 +119,15 @@ function drawScene() {
 	gl.clear(gl.COLOR_BUFFER_BIT); // 8.2 "Καθάρισε" το viewport χρωματίζοντάς το με το χρώμα που έχει οριστεί στο βήμα 7.
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); // 8.3 Κάνε ενεργό το vertex buffer
 	gl.vertexAttribPointer(vertexPositionAttributePointer, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-	gl.vertexAttribPointer(vertexColorAttributePointer, colorBuffer.itemSize, gl.FLOAT, false, 0, 0)
 	// 8.4 Παίρνε στοιχεία από τον ενεργό buffer και "τάιζέ" τα στη διεύθυνση του attribute μέσω του pointer(1η παράμετρος), 
 	// με μέγεθος στοιχείου σε πλήθος αριθμών (2η παρ.), 
 	// τύπο δεδομένων (3η), κανονικοποιώντας (4η παρ.) με βήμα (παράλειψης) τόσα bytes (5η παρ.) και ξεκινώντας από αυτό το byte (6η παράμετρος..)
 	
+	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+	gl.vertexAttribPointer(vertexColorAttributePointer, colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	// ΝΕΟ 8. (τελευταίο) Κάντε ό,τι στα βήματα 8.3-8.4 για τον buffer των χρωμάτων και τον αντίστοιχο δείκτη
 	
-	gl.drawArrays(gl.TRIANGLES, 0, vertexBuffer.itemCount); // 8.5 Σχεδίασε τρίγωνα (1η παρ.) ξεκινώντας από την 
+	gl.drawArrays(gl.LINE_LOOP, 0, vertexBuffer.itemCount); // 8.5 Σχεδίασε τρίγωνα (1η παρ.) ξεκινώντας από την 
 	//	κορυφή με σειρά όση η 2η παρ., και χρησιμοποίησε τόσες κορυφές όσες η 3η παρ. 
 }
     
@@ -157,11 +156,18 @@ function main() {
 </html>
 <!-- 
 Πρόλογος: Στην αρχή του κώδικα (γραμμή 5 - ΝΕΟ 0.1) έχει προστεθεί η κλήση μιας βιβλιοθήκης αναφοράς λαθών WebGL που αξιοποιείται στη δημιουργία του αντικειμένου context (γραμμή 124 - ΝΕΟ 0.2). Κατεβάστε το σχετικό αρχείο Javascript από το eclass και τοποθετήστε το στον ίδιο κατάλογο με τον κώδικά σας (ή δώστε το full path μέχρι την τοποθεσία του στη σχετική εντολή της γραμμής 5). 
+
 Ο ΚΩΔΙΚΑΣ ΠΕΡΙΕΧΕΙ ΕΝΑ ΜΙΚΡΟ ΛΑΘΟΣ: ΕΛΕΓΞΤΕ ΜΕΣΩ Inspect Element (Επιθεώρηση Στοιχείου) ΚΑΙ Console (Κονσόλα) ΤΟ ΣΧΕΤΙΚΟ ΜΗΝΥΜΑ ΚΑΙ ΔΙΟΡΘΩΣΤΕ ΤΟ 
- 
+=== Το λάθος είναι στην γραμμή 130 και στην συνάρτηση gl.drawarrays(...) -> gl.drawArrays(...). ===
+
 Μέρος Α': Ακολουθήστε τις οδηγίες στα βήματα ΝΕΟ 1., ΝΕΟ 2.,... για να δώσετε διαφορετικά χρώματα στις κορυφές του τριγώνου και δείτε το τελικό αποτέλεσμα. 
 
-Μέρος Β': Πειραματιστείτε με τα χρώματα και τις θέσεις των κορυφών (π.χ. εμφανίστε το τρίγωνο ανάποδα). 
+Μέρος Β': Πειραματιστείτε με τα χρώματα και τις θέσεις των κορυφών (π.χ. εμφανίστε το τρίγωνο ανάποδα).
+=== Στην γραμμή 91 άλλαξα τα πρόσημα στις συντεταγμένες των x, y, z συντεταγμένων για να εμφανιστεί ανάποδα το τρίγωνο ===
 
 Μέρος Γ': Πειραματιστείτε με τις σταθερές gl.LINES, gl.LINE_STRIP, gl.LINE_LOOP αντί της gl.TRIANGLES στην εντολή σχεδίασης gl.drawArrays. Παρατηρήστε τις διαφορές στο οπτικό αποτέλεσμα. Χρησιμοποιήστε και την gl.POINTS (για να λειτουργήσει προσθέστε την εντολή gl_PointSize = 2.0; στη main του vertex shader).
+=== Η gl.LINES εμφανίζει μία προσκείμενη πλευρά του ισοσκελούς τριγώνου (χωρίς χρωματισμό στο εσωτερικό του τριγώνου) ===
+=== Η gl.LINE_STRIP εμφανίζει μία προσκείμενη και την υποτείνουσα πλευρά του ισοσκελούς τριγώνου (χωρίς χρωματισμό στο εσωτερικό του τριγώνου) ===
+=== Η gl.LINE_LOOP εμφανίζει όλες τις πλευρές του ισοσκελούς τριγώνου (χωρίς χρωματισμό στο εσωτερικό του τριγώνου) ===
+
 -->

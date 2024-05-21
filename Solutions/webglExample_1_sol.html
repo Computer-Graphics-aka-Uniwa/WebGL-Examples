@@ -73,11 +73,11 @@ function initShaders() {
 	gl.enableVertexAttribArray(vertexPositionAttributePointer); // 5.12 Προετοίμασε το attribute (μέσω του παραπάνω pointer που δείχνει σε αυτό) να δεχθεί δεδομένα
 }
 
-function initBuffers() {
+function initBuffers() { // Άλλαξα μόνο εδώ τις συντεταγμένες των κορυφών του τριγώνου
 	var triangleVertices = new Float32Array([
-							 0.0,  0.5, 0.0, 1.0,
- 							 0.5, -0.5, 0.0, 1.0,
-  							-0.5, -0.5, 0.0, 1.0
+							 0.5,  0.5, 0.5, 1.0,
+ 							 0.5, -0.5, 0.5, 1.0,
+  							-0.5, -0.5, 0.5, 1.0
   							]);
 	// 6.1 Δημιούργησε έναν πίνακα (ArrayBuffer) στη μνήμη με τις συντεταγμένες (x,y,z,w) κάθε κορυφής. Ο πίνακας είναι μονοδιάστατος
 	vertexBuffer = gl.createBuffer(); // 6.2 Δημιούργησε (δέσμευσε) έναν buffer για τις κορυφές
