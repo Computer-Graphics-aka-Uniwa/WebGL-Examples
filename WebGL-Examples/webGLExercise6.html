@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="webgl-debug.js"></script> 
-<script src="gl-matrix-min.js"></script> 
+<script src="Libs/webgl-debug.js"></script> 
+<script src="Libs/gl-matrix-min.js"></script> 
 
 <script id="vShader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition; 
@@ -124,8 +124,8 @@ function initBuffers() {
 }
 
 function drawScene() { 
-	// gl.clear(gl.COLOR_BUFFER_BIT); // ΘΑ ΓΙΝΕΙ ΑΛΛΑΓΜΕΝΟ.6
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // ΝΕΟ.5: Καθαρίζει μαζί με το background και το z-buffer 
+	gl.clear(gl.COLOR_BUFFER_BIT); // ΘΑ ΓΙΝΕΙ ΑΛΛΑΓΜΕΝΟ.6
+	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // ΝΕΟ.5: Καθαρίζει μαζί με το background και το z-buffer 
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); 
 	gl.vertexAttribPointer(vertexPositionAttributePointer, vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); 
@@ -148,34 +148,31 @@ function drawScene() {
 	gl.uniformMatrix4fv(verticesTransformUniformPointer, false, rotationXMatrix); 
 	
 	// ΑΡΧΗ ΔΙΚΟΥΣΑΣ
-	var p;
+	
 	// Δηλώστε και δημιουργήστε (τοπικά) ένα νέο πίνακα translationMatrix και έναν πίνακα finalMatrix (ο δεύτερος για το γινόμενο)
 	var translationMatrix = new Float32Array(16);
 	var finalMatrix = new Float32Array(16);
-
-	// Προσθέστε μια for που θα εκτελεστεί από p=-0.5 έως p=0.5 με βήμα 0.5. Σε κάθε επανάληψη:
-		// Μετατρέπει το νέο πίνακα translationMatrix σε μετακίνησης (translate): κατά p στους άξονες x και y, και κατά 0 ως προς z.
-		
-		// Τον πολλαπλασιάζει με τον πίνακα περιστροφής (που έχει ήδη δημιουργηθεί από την ΑΛΛΑΓΜΕΝΟ.1 ώστε το τετράεδρο να φαίνεται 
-			// ότι περιστρέφεται "επιτόπου" σε κάθε θέση - το γινόμενο αποθηκεύεται στον finalMatrix
-		
-		// Ταΐζει το γινόμενο στο uniform uTransformMatrix - ΑΠΕΝΕΡΓΟΠΟΙΗΣΤΕ την παραπάνω εντολή ΑΛΛΑΓΜΕΝΟ.3 που κάνει κάτι
-			// αντίστοιχο και βάλτε την εδώ αλλά ΠΡΟΣΟΧΗ, χρησιμοποιήστε τον πίνακα finalMatrix σαν παράμετρο εδώ.
 	
-		// Τρέχει την παρακάτω εντολή σχεδίασης drawElements (ΝΕΟ.3) όπως είναι, αλλά ΜΕΣΑ ΣΤΟ ΣΩΜΑ ΤΗΣ ΕΠΑΝΑΛΗΨΗΣ της for
-
-	for(p=-0.5; p<=0.5; p+=0.5)
+	// Προσθέστε μια for που θα εκτελεστεί από p=-0.5 έως p=0.5 με βήμα 0.5. Σε κάθε επανάληψη:
+	// 		[1] Μετατρέπει το νέο πίνακα translationMatrix σε μετακίνησης (translate): κατά p στους άξονες x και y, και κατά 0 ως προς z.	
+	// 		[2] Τον πολλαπλασιάζει με τον πίνακα περιστροφής (που έχει ήδη δημιουργηθεί από την ΑΛΛΑΓΜΕΝΟ.1 ώστε το τετράεδρο να φαίνεται 
+	// 			ότι περιστρέφεται "επιτόπου" σε κάθε θέση - το γινόμενο αποθηκεύεται στον finalMatrix
+	// 		[3] Ταΐζει το γινόμενο στο uniform uTransformMatrix - ΑΠΕΝΕΡΓΟΠΟΙΗΣΤΕ την παραπάνω εντολή ΑΛΛΑΓΜΕΝΟ.3 που κάνει κάτι
+	// 			αντίστοιχο και βάλτε την εδώ αλλά ΠΡΟΣΟΧΗ, χρησιμοποιήστε τον πίνακα finalMatrix σαν παράμετρο εδώ.
+	// 		[4] Τρέχει την παρακάτω εντολή σχεδίασης drawElements (ΝΕΟ.3) όπως είναι, αλλά ΜΕΣΑ ΣΤΟ ΣΩΜΑ ΤΗΣ ΕΠΑΝΑΛΗΨΗΣ της for
+	var p;
+	for (p = -0.5; p <= 0.5; p += 0.5) 
 	{
 		glMatrix.mat4.fromTranslation(translationMatrix, [p,p,0]);
 		glMatrix.mat4.multiply(finalMatrix, translationMatrix, rotationXMatrix);
 		gl.uniformMatrix4fv(verticesTransformUniformPointer, false, finalMatrix);
-	
+
 	// ΤΕΛΟΣ ΔΙΚΟΥΣΑΣ
-	
-	gl.drawElements(gl.TRIANGLES,indexBuffer.itemCount,gl.UNSIGNED_SHORT, 0); // ΝΕΟ.3
-	}
-	// ΑΛΛΑΓΜΕΝΟ.5 Σχεδίαση με δείκτες πια
-	// gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexBuffer.itemCount);  
+
+		gl.drawElements(gl.TRIANGLES,indexBuffer.itemCount,gl.UNSIGNED_SHORT, 0); // ΝΕΟ.3
+		// ΑΛΛΑΓΜΕΝΟ.5 Σχεδίαση με δείκτες πια
+		// gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexBuffer.itemCount); 
+	} 
 }
  
 function main() {
@@ -188,7 +185,7 @@ function main() {
 	initBuffers(); 
 	gl.clearColor(0.5, 0.5, 0.5, 1.0); 
 	gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-	gl.enable(gl.DEPTH_TEST); // ΝΕΟ.4
+	 gl.enable(gl.DEPTH_TEST); // ΝΕΟ.4
 	drawScene(); 
  }
 
@@ -228,7 +225,8 @@ function stopAnimation() {
 	(ΑΛΛΑΓΜΕΝΟ.1, ΑΛΛΑΓΜΕΝΟ.2, ΑΛΛΑΓΜΕΝΟ.3)
 
 0.1 Χωρίς FACE CULLING (για ευκολία). Στο συγκεκριμένο παράδειγμα δε χρησιμοποιούμε 
-	(για ευκολία και σιγουριά στην αναζήτηση λογικών λαθών..) Διαλογή Όψεων (FACE CULLING) άρα δε μας απασχολεί η αριστερόστροφη/δεξιόστροφη σχεδίαση των τριγώνων. Αυτό σημαίνει ότι οποιοδήποτε τρίγωνο τυχαίνει να είναι 
+	(για ευκολία και σιγουριά στην αναζήτηση λογικών λαθών..) Διαλογή Όψεων (FACE CULLING) άρα δε μας απασχολεί η αριστερόστροφη/δεξιόστροφη σχεδίαση των τριγώνων. 
+	Αυτό σημαίνει ότι οποιοδήποτε τρίγωνο τυχαίνει να είναι 
 	"μπροστά", ως προς z, κατά την περιστροφή της πυραμίδας θα ΠΡΕΠΕΙ να εμφανίζεται.
 
 0.2 Τρισδιάστατη σχεδίαση: Έχουν αλλάξει οι συντεταγμένες των κορυφών αφού πια θέλουμε ένα τρισδιάστατο αντικείμενο (τετράεδρο). (ΑΛΛΑΓΜΕΝΟ.4)

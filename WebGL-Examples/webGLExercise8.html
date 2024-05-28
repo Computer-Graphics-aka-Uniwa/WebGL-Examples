@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="webgl-debug.js"></script> 
-<script src="gl-matrix-min.js"></script> 
+<script src="Libs/webgl-debug.js"></script> 
+<script src="Libs/gl-matrix-min.js"></script> 
 
 <script id="vShader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition; 
@@ -230,25 +230,24 @@ function drawScene() {
 	var x;
 	var y;
 	r = 2; 
-	x = r * cos(totalAngle); 
-	y = r * sin(totalAngle);
+	x = r * Math.cos(totalAngle); 
+	y = r * Math.sin(totalAngle);
 	glMatrix.mat4.lookAt(viewMatrix, [x, y, totalZ], [0,0,0], [0,0,1]);
 		
 	
-	/*	ΒΗΜΑ.11. ΝΑ ΔΗΜΙΟΥΡΓΗΘΕΙ Ο ΠΙΝΑΚΑΣ perspectiveMatrix (Perspective Matrix) ΚΑΙ ΝΑ ΠΕΡΙΕΧΕΙ ΤΟ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟ ΓΙΑ ΤΗΝ ΠΡΟΟΠΤΙΚΗ (χρησιμοποιήστε τη σχετική συνάρτηση βιβλιοθήκης perspective, δείτε τις παραμέτρους στο documentation https://glmatrix.net/docs/module-mat4.html):
-				
-				Για τις τιμές των παραμέτρων χρησιμοποιήστε:	
-				near --> 0.01
-				far -->	100
-				field of view --> Math.PI/2
-				aspect --> 1   
-	*/
+	/*	ΒΗΜΑ.11. ΝΑ ΔΗΜΙΟΥΡΓΗΘΕΙ Ο ΠΙΝΑΚΑΣ perspectiveMatrix (Perspective Matrix) ΚΑΙ ΝΑ ΠΕΡΙΕΧΕΙ ΤΟ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟ ΓΙΑ ΤΗΝ ΠΡΟΟΠΤΙΚΗ (χρησιμοποιήστε τη σχετική συνάρτηση βιβλιοθήκης perspective, δείτε τις παραμέτρους στο documentation https://glmatrix.net/docs/module-mat4.html): */
+					
+	//			Για τις τιμές των παραμέτρων χρησιμοποιήστε:	
+	//			near --> 0.01
+	//			far -->	100
+	//			field_of_view --> Math.PI/2
+	//			aspect --> 1   
 	glMatrix.mat4.perspective(perspectiveMatrix, Math.PI/2, 1, 0.01, 100);
 		
 		
 	/*	ΒΗΜΑ.12. ΥΠΟΛΟΓΙΣΤΕ ΤΟ ΓΙΝΟΜΕΝΟ ΤΟΥΣ ΚΑΙ ΑΠΟΘΗΚΕΥΣΤΕ ΤΟ ΣΤΟN pvMatrix 
 		- ΤΟ ΟΝΟΜΑ ΥΠΟΝΟΕΙ ΚΑΙ ΤΗ ΣΕΙΡΑ ΣΤΟΝ ΠΟΛΛΑΠΛΑΣΙΑΣΜΟ  */ 
-	pvMatrix = perspectiveMatrix * viewMatrix;	
+	glMatrix.mat4.multiply(pvMatrix, perspectiveMatrix, viewMatrix);	
 		
 		
 	// ΒΗΜΑ.13. Ταΐζεται ο πίνακας pvMatrix στο νέο uniform 
@@ -256,6 +255,7 @@ function drawScene() {
 	// (μετά την ολοκλήρωση του ΒΗΜΑΤΟΣ.12. ο πίνακας θα περιέχει 
 	// σε κάθε εκτέλεση της redraw τη νέα θέση της κάμερας και την αντίστοιχη προοπτική)
 	// Είναι η αντίστοιχη εντολή με τη 3η εντολή μέσα στο σώμα της for παρακάτω
+	gl.uniformMatrix4fv(perspectiveViewUniformPointer, false, pvMatrix);
 	
 	
 // ***---*** Τέλος δημιουργίας πίνακα προοπτικής/κάμερας και ταΐσματος στο νέο uniform 

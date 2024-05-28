@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="webgl-debug.js"></script> 
-<script src="gl-matrix-min.js"></script> 
+<script src="Libs/webgl-debug.js"></script> 
+<script src="Libs/gl-matrix-min.js"></script> 
 
 <script id="vShader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition; 
@@ -44,11 +44,11 @@ var finalMatrix = new Float32Array(16);
 var scaleFactor = 1.01;
 var scale = 1.0;
 
-var floorVBuffer;
-var floorCBuffer;
-var floorIBuffer;
 // ΒΗΜΑ.1. Προσθέστε δηλώσεις για τρεις νέους buffers: (α) για τις κορυφές του πατώματος, (β) για τα χρώματα των κορυφών του πατώματος και (γ) για τους δείκτες (indices) των κορυφών του πατώματος
 // Προτεινόμενα ονόματα: floorVBuffer, floorCBuffer, floorIBuffer
+var floorVertexBuffer;
+var floorColorBuffer;
+var floorIndexBuffer;
 
 
 
@@ -138,44 +138,49 @@ function initBuffers() {
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexMatrix,gl.STATIC_DRAW);
 	indexBuffer.itemCount = 12; 
 	
+	
 	// ΒΗΜΑ.2. Χρησιμοποιώντας τα 3 παραπάνω πακέτα εντολών σαν παράδειγμα, 
 	// δημιουργήστε και "ταΐστε" εδώ τους 3 νέους buffers που δηλώσατε για το πάτωμα
 	// Θεωρήστε και τοποθετήστε το πάτωμα παράλληλο στο επίπεδο xy και στο κέντρο του,
 	// με διαστάσεις 1,8x1,8 (δηλαδή από -0,9 ως 0,9 σε x και y) και με z=0 για όλες τις κορυφές του
 	// Χρησιμοποιήστε διαφορετικές αποχρώσεις του γκρι για τις κορυφές του
+	
 	var floorVertices = new Float32Array([
-			-0.9,  0.9, 0.0, 1.0,  // Κορυφή Α
-			 0.9,  0.9, 0.0, 1.0,   // Κορυφή Β
-			 0.9, -0.9, 0.0, 1.0,   // Κορυφή Γ
-			-0.9, -0.9, 0.0, 1.0    // Κορυφή Δ
-	]);
-	floorVBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, floorVBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, floorVertices, gl.STATIC_DRAW);
-	floorVBuffer.itemSize = 4;
-	floorVBuffer.itemCount = 4;
-
-	var floorColorVertices = new Float32Array([
-				1.0, 0.0, 0.0, 1.0, // Χρώμα κορυφής Α: κόκκινο
-				0.0, 1.0, 0.0, 1.0, // Χρώμα κορυφής Β: πράσινο
-				0.0, 0.0, 1.0, 1.0, // Χρώμα κορυφής Γ: μπλε
-				1.0, 1.0, 0.0, 1.0  // Χρώμα κορυφής Δ: κίτρινο
+			 -0.9,  0.9, 0.0, 1.0,  // Κορυφή Α
+			-0.9, -0.9, 0.0, 1.0, // Κορυφή Β
+			 0.9, -0.9, 0.0, 1.0, // Κορυφή Γ
+			 0.9,  0.9, 0.0, 1.0   // Κορυφή Δ
 				]);
-	floorCBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, floorCBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, floorColorVertices, gl.STATIC_DRAW);
-	floorCBuffer.itemSize = 4;
-	floorCBuffer.itemCount = 4;
+	floorVertexBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, floorVertexBuffer); 
+	gl.bufferData(gl.ARRAY_BUFFER, floorVertices,	gl.STATIC_DRAW); 
+	floorVertexBuffer.itemSize = 4;  
+	floorVertexBuffer.itemCount = 4;
 
-	var indexFloorMatrix = new Uint16Array([
+	// ΠΑΚΕΤΟ ΕΝΤΟΛΩΝ 2. Χρώματα 4 κορυφών
+	var floorColors = new Float32Array([
+				0.0, 0.0, 0.0, 1.0, // Χρώμα κορυφής Α: κόκκινο
+				0.3, 0.3, 0.3, 1.0, // Χρώμα κορυφής Β: πράσινο
+				0.7, 0.7, 0.7, 1.0, // Χρώμα κορυφής Γ: μπλε
+				1.0, 1.0, 1.0, 1.0  // Χρώμα κορυφής Δ: κίτρινο
+				]);
+	floorColorBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, floorColorBuffer); 
+	gl.bufferData(gl.ARRAY_BUFFER, floorColors, gl.STATIC_DRAW); 
+	floorColorBuffer.itemSize = 4;  
+	floorColorBuffer.itemCount = 4;
+
+	// ΠΑΚΕΤΟ ΕΝΤΟΛΩΝ 3. Πίνακας με αναφορές στις παραπάνω κορυφές (indices) και σχετικός buffer
+	var floorIndexMatrix = new Uint16Array([
 				0,1,2,  // ΑΒΓ
 				0,2,3,  // ΑΓΔ
-				0,3,1,  // ΑΔΒ
-				1,3,2  // ΒΔΓ
+				  // ΑΔΒ
+				  // ΒΔΓ
 				]);
-	floorIBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, floorIBuffer);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexFloorMatrix, gl.STATIC_DRAW);
+	floorIndexBuffer = gl.createBuffer(); 
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, floorIndexBuffer); 
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, floorIndexMatrix,gl.STATIC_DRAW);
+	floorIndexBuffer.itemCount = 6;
 }
 
 function drawScene() { 
@@ -213,22 +218,25 @@ function drawScene() {
 	}
 	
 	// ΒΗΜΑ.3. ΠΡΟΣΘΕΣΤΕ ΕΔΩ ΤΟΝ ΚΩΔΙΚΑ ΓΙΑ ΝΑ ΕΝΕΡΓΟΠΟΙΗΘΟΥΝ ΟΙ BUFFERS ΤΟΥ "ΠΑΤΩΜΑΤΟΣ" ΚΑΙ ΝΑ ΣΧΕΔΙΑΣΤΕΙ ΤΟ ΠΑΤΩΜΑ. ΑΝΑΛΥΤΙΚΑ:
-	//  ΒΗΜΑ 3.1 ΔΕΙΤΕ ΤΟΝ ΚΩΔΙΚΑ "ΑΡΧΗ-ΤΕΛΟΣ 1ων ΕΡΓΑΣΙΩΝ ΤΕΤΡΑΕΔΡΟΥ" ΓΙΑ ΕΝΕΡΓΟΠΟΙΗΣΗ ΚΑΙ ΑΝΤΙΣΤΟΙΧΙΣΗ ΤΩΝ ATTRIBUTES ΤΟΥ VERTEX SHADER ME ΤΟΥΣ ΚΑΤΑΛΛΗΛΟΥΣ BUFFERS ΤΗΣ ΠΥΡΑΜΙΔΑΣ" ΠΑΡΑΠΑΝΩ, ΒΑΛΤΕ ΕΔΩ ΤΙΣ ΑΝΤΙΣΤΟΙΧΕΣ ΕΝΤΟΛΕΣ
-	gl.bindBuffer(gl.ARRAY_BUFFER, floorVBuffer); 
-	gl.vertexAttribPointer(vertexPositionAttributePointer, floorVBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ARRAY_BUFFER, floorCBuffer); 
-	gl.vertexAttribPointer(vertexColorAttributePointer, floorCBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, floorIBuffer);
 	
+	//  ΒΗΜΑ 3.1 ΔΕΙΤΕ ΤΟΝ ΚΩΔΙΚΑ "ΑΡΧΗ-ΤΕΛΟΣ 1ων ΕΡΓΑΣΙΩΝ ΤΕΤΡΑΕΔΡΟΥ" ΓΙΑ ΕΝΕΡΓΟΠΟΙΗΣΗ ΚΑΙ ΑΝΤΙΣΤΟΙΧΙΣΗ ΤΩΝ ATTRIBUTES ΤΟΥ VERTEX SHADER ME ΤΟΥΣ ΚΑΤΑΛΛΗΛΟΥΣ BUFFERS ΤΗΣ ΠΥΡΑΜΙΔΑΣ" ΠΑΡΑΠΑΝΩ, ΒΑΛΤΕ ΕΔΩ ΤΙΣ ΑΝΤΙΣΤΟΙΧΕΣ ΕΝΤΟΛΕΣ
+		
+	gl.bindBuffer(gl.ARRAY_BUFFER, floorVertexBuffer); 
+	gl.vertexAttribPointer(vertexPositionAttributePointer, floorVertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ARRAY_BUFFER, floorColorBuffer); 
+	gl.vertexAttribPointer(vertexColorAttributePointer, floorColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, floorIndexBuffer);
+
 	// 	ΒΗΜΑ 3.2 ...ΚΑΙ ΤΟΝ ΚΩΔΙΚΑ "ΑΡΧΗ-ΤΕΛΟΣ 2ων ΕΡΓΑΣΙΩΝ ΤΕΤΡΑΕΔΡΟΥ" ΓΙΑ ΔΗΜΙΟΥΡΓΙΑ/ΕΝΗΜΕΡΩΣΗ ΠΙΝΑΚΑ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟΥ, ΤΑΪΣΜΑ ΣΤΟ ΑΝΤΙΣΤΟΙΧΟ uniform ΚΑΙ ΣΧΕΔΙΑΣΗ
 	//  ΔΕ ΘΑ ΧΡΕΙΑΣΤΕΙ for ΓΙΑ ΤΟ ΠΑΤΩΜΑ, ΟΥΤΕ ΚΑΠΟΙΑ ΚΛΙΜΑΚΩΣΗ Ή ΜΕΤΑΚΙΝΗΣΗ: Ο ΠΙΝΑΚΑΣ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟΥ ΘΑ ΕΙΝΑΙ ΜΟΝΑΔΙΑΙΟΣ
 	//  ΩΣΤΟΣΟ ΧΡΕΙΑΖΕΤΑΙ ΠΙΝΑΚΑΣ ΜΕΤΑΣΧΗΜΑΤΙΣΜΟΥ, ΠΑΡΟΤΙ ΘΑ ΕΙΝΑΙ ΜΟΝΑΔΙΑΙΟΣ,
 	// ΓΙΑΤΙ ΤΟΝ ΕΧΟΥΜΕ "ΤΑΞΕΙ" ΣΤΟ VERTEX SHADER ΩΣ UNIFORM (ΤΟ uTransformMatrix) ΠΟΥ ΠΕΡΙΜΕΝΕΙ "ΤΑΪΣΜΑ". ΒΑΛΤΕ ΕΔΩ ΤΙΣ ΑΝΤΙΣΤΟΙΧΕΣ ΕΝΤΟΛΕΣ ΔΗΜΙΟΥΡΓΙΑΣ ΜΟΝΑΔΙΑΙΟΥ ΠΙΝΑΚΑ ΣΤΟΝ finalMatrix, ταΐσματος του uniform και σχεδίασης
-	glMatrix.mat4.fromTranslation(finalMatrix,[0,1,0]);
 	
-	glMatrix.mat4.multiply(finalMatrix,translationMatrix,scaleMatrix);
-	gl.uniformMatrix4fv(modelUniformPointer, false, finalMatrix); 
-	gl.drawElements(gl.TRIANGLES,indexBuffer.itemCount,gl.UNSIGNED_SHORT, 0);
+	glMatrix.mat4.identity(finalMatrix);
+	
+	gl.uniformMatrix4fv(modelUniformPointer, false, finalMatrix);
+	gl.drawElements(gl.TRIANGLES,floorIndexBuffer.itemCount, gl.UNSIGNED_SHORT, 0);
+	
 }
  
 function main() {
@@ -279,10 +287,12 @@ function stopAnimation() {
 </html>
 <!--
 ΚΛΙΜΑΚΩΣΗ ΜΕΤΑΞΥ ΟΡΙΩΝ (Read-only)
-Στον κώδικα έχουν προστεθεί τα απαραίτητα (εντολές ΚΛΙΜΑ) για την κλιμάκωση των τετράεδρων μεταξύ 50% και 150% του αρχικού τους μεγέθους. Η κλιμάκωση εφαρμόζεται μόνο ως προς x και y και θέλουμε να εμφανίζεται σα να συμβαίνει "τοπικά" για κάθε τετράεδρο. 
+Στον κώδικα έχουν προστεθεί τα απαραίτητα (εντολές ΚΛΙΜΑ) για την κλιμάκωση των τετράεδρων μεταξύ 50% και 150% του αρχικού τους μεγέθους. 
+Η κλιμάκωση εφαρμόζεται μόνο ως προς x και y και θέλουμε να εμφανίζεται σα να συμβαίνει "τοπικά" για κάθε τετράεδρο. 
 
 ΧΡΗΣΗ ΠΟΛΛΩΝ BUFFERS ΓΙΑ ΣΧΕΔΙΑΣΗ: ΒΗΜΑ.ΤΑ 1,2,3
-Στόχος αυτής της άσκησης είναι η σχεδίαση ενός "πατώματος" κάτω από τα τετράεδρα: το πάτωμα είναι παράλληλο στο επίπεδο xy, με διαστάσεις 1.8x1.8 και με z=0, δηλαδή εκτείνεται από -0.9 ως 0.9 ως προς x και y... 
+Στόχος αυτής της άσκησης είναι η σχεδίαση ενός "πατώματος" κάτω από τα τετράεδρα: το πάτωμα είναι παράλληλο στο επίπεδο xy, 
+με διαστάσεις 1.8x1.8 και με z=0, δηλαδή εκτείνεται από -0.9 ως 0.9 ως προς x και y... 
 Σε επόμενο στάδιο θα μετακινηθεί η κάμερα και θα εμφανιστεί η σκηνή από άλλη οπτική γωνία.
 
 ΑΚΟΛΟΥΘΗΣΤΕ ΤΑ ΒΗΜΑ.ΤΑ ΠΟΥ ΕΜΦΑΝΙΖΟΝΤΑΙ ΣΑΝ ΑΡΙΘΜΗΜΕΝΑ ΣΧΟΛΙΑ ΣΤΟΝ ΚΩΔΙΚΑ, ΣΥΜΠΛΗΡΩΝΟΝΤΑΣ ΤΙΣ ΑΝΤΙΣΤΟΙΧΕΣ ΕΝΤΟΛΕΣ ΜΕ ΤΗ ΣΕΙΡΑ ΤΗΣ ΑΡΙΘΜΗΣΗΣ

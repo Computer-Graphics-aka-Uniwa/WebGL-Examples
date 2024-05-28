@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="webgl-debug.js"></script> 
-<script src="gl-matrix-min.js"></script> 
+<script src="Libs/webgl-debug.js"></script> 
+<script src="Libs/gl-matrix-min.js"></script> 
 
 <script id="vShader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition; 
@@ -134,13 +134,15 @@ function drawScene() {
 	
 	// PLUS1: Προσθέστε εντολές ώστε όταν η δεξιά άκρη του τετραγώνου ξεπερνά τη δεξιά άκρη της οθόνης ή η αριστερή άκρη του τετραγώνου ξεπερνά την αριστερή άκρη της οθόνης η μετακίνηση αντιστρέφεται. 
 		
-	if(totalX>0.5 || totalX<-0.5){
+	if(totalX > 0.5 || totalX < -0.5)
+	{
 		document.getElementById("xTxt").value = -numX.toString();
 	}
 	
 	// PLUS2: Προσθέστε εντολές ώστε όταν η επάνω άκρη του τετραγώνου ξεπερνά την επάνω άκρη της οθόνης ή η κάτω άκρη του τετραγώνου ξεπερνά την κάτω άκρη της οθόνης, η μετακίνηση αντιστρέφεται. 
 	
-	if(totalY>0.5 || totalY<-0.5){
+	if(totalY > 0.5 || totalY < -0.5)
+	{
 		document.getElementById("yTxt").value = -numY.toString();
 	}
 	

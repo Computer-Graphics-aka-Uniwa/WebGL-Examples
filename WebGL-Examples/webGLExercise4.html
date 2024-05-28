@@ -2,8 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<script src="webgl-debug.js"></script> 
-<script src="gl-matrix-min.js"></script> 
+<script src="Libs/webgl-debug.js"></script> 
+<script src="Libs/gl-matrix-min.js"></script> 
 
 <script id="vShader" type="x-shader/x-vertex">
 attribute vec4 aVertexPosition; 
@@ -85,26 +85,37 @@ function initShaders() {
 
 function initBuffers() {
 		var triangleVertices = new Float32Array([
- 							 0.0,  0.5, 0.0, 1.0, // v0
- 							 0.5, -0.5, 0.0, 1.0, // v1
-							-0.5, -0.5, 0.0, 1.0  // v2
+ 							 0.5, 0.5, 0.0, 1.0, // v0
+ 							 -0.5, 0.5, 0.0, 1.0, // v1
+							 0.5, -0.5, 0.0, 1.0,  // v2
+							 -0.5, -0.5, 0.0, 1.0,
+							 0.9, 0.9, 0.0, 1.0,
+							 -0.9, 0.9, 0.0, 1.0,
+							 0.9, 0.5, 0.0, 1.0,
+							 -0.9, 0.5, 0.0, 1.0
+							 
 							]);
 		vertexBuffer = gl.createBuffer(); 
 		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer); 
 		gl.bufferData(gl.ARRAY_BUFFER, triangleVertices,	gl.STATIC_DRAW); 
 		vertexBuffer.itemSize = 4;
-		vertexBuffer.itemCount = 3; 
+		vertexBuffer.itemCount = 8; 
 		
 		var triangleColors = new Float32Array([
 					1.0, 0.0, 0.0, 1.0, // χρώμα v0
 					0.0, 1.0, 0.0, 1.0, // χρώμα v1
-					0.0, 0.0, 1.0, 1.0  // χρώμα v2
+					0.0, 0.0, 1.0, 1.0,  // χρώμα v2
+					1.0, 0.0, 1.0, 1.0,
+					0.0, 1.0, 1.0, 1.0,
+					1.0, 1.0, 0.0, 1.0,
+					1.0, 1.0, 1.0, 1.0,
+					0.0, 0.0, 0.0, 1.0
 					]);
 		colorBuffer = gl.createBuffer(); 
 		gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); 
 		gl.bufferData(gl.ARRAY_BUFFER, triangleColors, gl.STATIC_DRAW); 
 		colorBuffer.itemSize = 4;
-		colorBuffer.itemCount = 3; 
+		colorBuffer.itemCount = 8; 
 
 }
 
@@ -155,9 +166,9 @@ function main() {
 	gl.clearColor(0.5, 0.5, 0.5, 1.0); 
 	gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 	
-	// gl.frontFace(gl.CCW);  // ΝΕΟΤΕΡΟ.4 "Εμπρός" όψη να θεωρείται η αριστερόστροφη (counter-clockwise CCW)
-	// gl.enable(gl.CULL_FACE); // ΝΕΟΤΕΡΟ.5 Ενεργοποίησε την απόκρυψη της "κρυφής όψης" (CULL FACE)
-	// gl.cullFace(gl.BACK); // ΝΕΟΤΕΡΟ.6 Κάνε "κρυφή" την "πίσω" όψη 	
+	gl.frontFace(gl.CCW);  // ΝΕΟΤΕΡΟ.4 "Εμπρός" όψη να θεωρείται η αριστερόστροφη (counter-clockwise CCW)
+	gl.enable(gl.CULL_FACE); // ΝΕΟΤΕΡΟ.5 Ενεργοποίησε την απόκρυψη της "κρυφής όψης" (CULL FACE)
+	gl.cullFace(gl.BACK); // ΝΕΟΤΕΡΟ.6 Κάνε "κρυφή" την "πίσω" όψη 	
 	
 	drawScene();
  }
@@ -204,11 +215,15 @@ function stopAnimation() {
 
 ANIMATION
 Βήμα.0. (read-only) Παρατηρήστε το μηχανισμό του animation. Το κουμπί start καλεί τη startAnimation (ΝΕΟΤΕΡΟ.1). 
-		Αυτή, αν το requestId είναι null (το requestId είναι global μεταβλητή - ΝΕΟΤΕΡΟ.0), καλεί την animationStep() (ΝΕΟΤΕΡΟ.2). Αν το requestId έχει τιμή διαφορετική από 0 δεν καλείται η animationStep() - αυτό γίνεται για να υπάρχει μόνο μία μοναδική ακολουθία requests). 
+		Αυτή, αν το requestId είναι null (το requestId είναι global μεταβλητή - ΝΕΟΤΕΡΟ.0), καλεί την animationStep() (ΝΕΟΤΕΡΟ.2). 
+		Αν το requestId έχει τιμή διαφορετική από 0 δεν καλείται η animationStep() - αυτό γίνεται για να υπάρχει μόνο μία μοναδική ακολουθία requests). 
 
-		Η animationStep αρχικά καλεί τη drawScene που σχεδιάζει μια νέα εκδοχή της σκηνής. Στη συνέχεια, υποβάλλει αίτημα για animation frame, λαμβάνει requestId και εντάσσεται σε ουρά (callback list) μία επόμενη κλήση της. Όταν έρχεται η ώρα εκτέλεσης της κλήσης που είναι στην ουρά, εκτελείται η drawScene και μία νέα κλήση μπαίνει στην ουρά κ.ο.κ. 
+		Η animationStep αρχικά καλεί τη drawScene που σχεδιάζει μια νέα εκδοχή της σκηνής. Στη συνέχεια, υποβάλλει αίτημα για animation frame, 
+		λαμβάνει requestId και εντάσσεται σε ουρά (callback list) μία επόμενη κλήση της. Όταν έρχεται η ώρα εκτέλεσης της κλήσης 
+		που είναι στην ουρά, εκτελείται η drawScene και μία νέα κλήση μπαίνει στην ουρά κ.ο.κ. 
 
-		Το animation σταματά μέσω της stopAnimation (ΝΕΟΤΕΡΟ.3) με αίτημα ακύρωσης της επανεκτέλεσης της animationStep, μέσω του (τελευταίου) requestId που είχε λάβει, και το requestId τίθεται 0 ώστε να μπορεί να ξαναρχίσει. 
+		Το animation σταματά μέσω της stopAnimation (ΝΕΟΤΕΡΟ.3) με αίτημα ακύρωσης της επανεκτέλεσης της animationStep, 
+		μέσω του (τελευταίου) requestId που είχε λάβει, και το requestId τίθεται 0 ώστε να μπορεί να ξαναρχίσει. 
 
 ΔΙΑΛΟΓΗ ΟΨΕΩΝ
 Βήμα.1. Εκτελέστε τον κώδικα ως έχει και μετά αφαιρέστε τα σχόλια στις ΝΕΟΤΕΡΟ.4, ΝΕΟΤΕΡΟ.5, ΝΕΟΤΕΡΟ.6 ώστε να ενεργοποιηθούν οι 
@@ -218,11 +233,13 @@ ANIMATION
 
 TRIANGLE STRIP & ΔΙΑΛΟΓΗ ΟΨΕΩΝ
 Bήμα.2. (read-only) Η πρώτη παράμετρος της gl.drawArrays είναι gl.TRIANGLE_STRIP. 
-		Δείτε στις σχετικές διαφάνειες του εργαστηρίου με ποιο τρόπο λαμβάνεται υπόψη η σειρά των κορυφών, των οποίων τις συντεταγμένες έχουμε δώσει μέσα στον πίνακα στην initBuffers, όταν αυτές είναι περισσότερες από 3.
+		Δείτε στις σχετικές διαφάνειες του εργαστηρίου με ποιο τρόπο λαμβάνεται υπόψη η σειρά των κορυφών, 
+		των οποίων τις συντεταγμένες έχουμε δώσει μέσα στον πίνακα στην initBuffers, όταν αυτές είναι περισσότερες από 3.
    
 Βήμα.3. Λαμβάνοντας υπόψη και το Βήμα.2. μετατρέψτε το τρίγωνο σε τετράγωνο που οι 4 κορυφές του βρίσκονται στα x=+/- 0.5, y=+/- 0.5, z=0. 
 		Φροντίστε να είναι ΑΡΧΙΚΑ να είναι ορατό (δηλαδή να μην το απορρίπτει η ΔΙΑΛΟΓΗ ΟΨΕΩΝ), παρόμοια με το Βήμα.1. Οι αλλαγές που χρειάζονται να γίνουν είναι όλες στην initBuffers. 
 	
-Βήμα.4. Προσπαθήστε να επεκτείνετε το τετράγωνο του προηγούμενου βήματος στο TAY του σχήματος στην τελευταία σχετική διαφάνεια του εργαστηρίου, χρησιμοποιώντας TRIANGLE_STRIP και διαλογή όψεων - θα χρειαστεί να εισάγετε και εκφυλισμένα τρίγωνα, δηλαδή να επαναλάβετε κάποιες κορυφές.
+Βήμα.4. Προσπαθήστε να επεκτείνετε το τετράγωνο του προηγούμενου βήματος στο TAY του σχήματος στην τελευταία σχετική διαφάνεια του εργαστηρίου, 
+χρησιμοποιώντας TRIANGLE_STRIP και διαλογή όψεων - θα χρειαστεί να εισάγετε και εκφυλισμένα τρίγωνα, δηλαδή να επαναλάβετε κάποιες κορυφές.
 		
 -->
