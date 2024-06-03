@@ -68,6 +68,3 @@ gl.drawElements(gl.TRIANGLES, metablhthIndexBuffer.itemCount, gl.UNSIGNED_SHORT,
 
 # webGLExercise9.html
 
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbMTg5OTE5NDg3N119
--->
