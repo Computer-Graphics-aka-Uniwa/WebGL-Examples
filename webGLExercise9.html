@@ -264,19 +264,19 @@ function initBuffers() {
 //	αντίστοιχη global μεταβλητή που δηλώσαμε	(ΕΤΟΙΜΟ.12)
 	tetraTexture = gl.createTexture();
 //	ΕΤΟΙΜΟ.19. Υποδεικνύουμε την τοποθεσία της εικόνας (χωρίς path, εννοείται στο ίδιο directory)
-	var tetraImageURL = "stone.jpg";
+	var tetraImageURL = "textures/stone.jpg";
 //	ΕΤΟΙΜΟ.20. Καλούμε αυτήν την custom συνάρτηση που ενημερώνει το texture
 //	αφού έχει φορτωθεί η εικόνα (δες μέσα στη συνάρτηση)
 	preprocessTextureImage(tetraImageURL, tetraTexture); // ETOIMO.21. είναι η custom συνάρτηση παρακάτω
 	
 //	ΕΤΟΙΜΟ.22. Ομοίως με τα ΕΤΟΙΜΟ.18 - ΕΤΟΙΜΟ.20 για το texture του πατώματος
 	floorTexture = gl.createTexture();
-	var floorImageURL = "PADA.jpg";
+	var floorImageURL = "textures/PADA.jpg";
 	preprocessTextureImage(floorImageURL, floorTexture); // ETOIMO.21. είναι η custom συνάρτηση παρακάτω
 	
 //	ΒΗΜΑ.2. Προσθέστε τις αντίστοιχες εντολές με τις ΕΤΟΙΜΟ.18 - ΕΤΟΙΜΟ.20 ή την ομάδα ETOIMO.22 για το texture του skybox χρησιμοποιώντας την εικόνα sky.jpg
 	skyboxTexture = gl.createTexture();
-	var skyboxImageURL = "sky.jpg";
+	var skyboxImageURL = "textures/sky.jpg";
 	preprocessTextureImage(skyboxImageURL, skyboxTexture);
 }
 
