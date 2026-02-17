@@ -1,5 +1,14 @@
 # Κατάλογος Ασκήσεων Javascript & WebGL
 
+<p align="center">
+  <strong>Antonios Kokkinos</strong><br>
+  Student ID: 20390107
+</p>
+
+<p align="center">
+  <a href="https://github.com/KokkinosAntonios" target="_blank">GitHub</a>
+</p>
+
 ## jsExample1.html
 Ένα απλό πρόγραμμα σε Javascript για tutorial.
 
